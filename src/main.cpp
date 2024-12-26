@@ -3,15 +3,17 @@
 #include <ESP8266WiFi.h>
 #include <espnow.h>
 
+#include <tm1630.hpp>
+
 // コントローラーにセットして電源を入れたら左のスイッチを押しながら右のスイッチを押すと起動する。
 const int whiteSwitch = 16;
 const int redSwitch = 5;
 const int yellowSwitch = 4;
 const int orangeSwitch = 13;
-const int joyStick = 2;
+/* const int joyStick = 2;
 const int xValue = 14;
 const int yValue = 12;
-
+ */
 const int led = 15;
 
 unsigned long lastTime = 0;
@@ -84,6 +86,7 @@ void setup()
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
   gpioSetup();
+  tm1630setup();
   // Init ESP-NOW
   if (esp_now_init() != 0)
   {
@@ -113,14 +116,8 @@ void loop()
     inPutValue();
     // Send message via ESP-NOW
     // esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));
-    if (shipData.battery == 0 || myData.white == 0)
-    {
-      digitalWrite(15, HIGH);
-    }
-    else
-    {
-      digitalWrite(15, LOW);
-    }
+    Serial.println(8.00);
+    displayNumbers(800);
     lastTime = millis(); // プログラム実行から経過した時間
   }
 }
