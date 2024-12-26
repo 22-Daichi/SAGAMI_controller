@@ -2,6 +2,10 @@
 
 #include <ESP8266WiFi.h>
 #include <espnow.h>
+#include <Wire.h>
+#include <MCP23017.h>
+
+MCP23017 mcp = MCP23017(0x20);
 
 // コントローラーにセットして電源を入れたら左のスイッチを押しながら右のスイッチを押すと起動する。
 const int whiteSwitch = 16;
@@ -45,6 +49,15 @@ void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len)
 // Callback when data is sent
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus)
 {
+  Serial.print("Last Packet Send Status: ");
+  if (sendStatus == 0)
+  {
+    Serial.println("Delivery success");
+  }
+  else
+  {
+    Serial.println("Delivery fail");
+  }
 }
 
 void gpioSetup()
@@ -84,6 +97,9 @@ void setup()
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
   gpioSetup();
+  Wire.begin(2, 14);
+  mcp.init();
+  mcp.pinMode(7, OUTPUT);
   // Init ESP-NOW
   if (esp_now_init() != 0)
   {
@@ -94,20 +110,11 @@ void setup()
   esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
   esp_now_register_send_cb(OnDataSent);
   esp_now_register_recv_cb(OnDataRecv);
-  delay(1000);
-  digitalWrite(15, HIGH);
-  delay(1000);
-  digitalWrite(15, LOW);
-  delay(1000);
-  digitalWrite(15, HIGH);
-  delay(1000);
-  digitalWrite(15, LOW);
-  delay(1000);
 }
 
 void loop()
 {
-  if ((millis() - lastTime) > timerDelay) // 50msに1回
+  /* if ((millis() - lastTime) > timerDelay) // 50msに1回
   {
     // Set values to send
     inPutValue();
@@ -122,5 +129,11 @@ void loop()
       digitalWrite(15, LOW);
     }
     lastTime = millis(); // プログラム実行から経過した時間
-  }
+  } */
+
+  mcp.digitalWrite(7, 1);
+  delay(500);
+  mcp.digitalWrite(7, 0);
+  delay(500);
+  esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));
 }
