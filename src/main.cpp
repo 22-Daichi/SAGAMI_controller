@@ -57,6 +57,7 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus)
   else
   {
     Serial.println("Delivery fail");
+    Serial.println(mcp.digitalRead(8));
   }
 }
 
@@ -96,10 +97,11 @@ void setup()
   shipData.battery = 1;
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
-  gpioSetup();
+  // gpioSetup();
   Wire.begin(2, 14);
   mcp.init();
   mcp.pinMode(7, OUTPUT);
+  mcp.pinMode(8, INPUT);
   // Init ESP-NOW
   if (esp_now_init() != 0)
   {
