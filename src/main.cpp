@@ -8,26 +8,26 @@
 MCP23017 mcp = MCP23017(0x20);
 
 // コントローラーにセットして電源を入れたら左のスイッチを押しながら右のスイッチを押すと起動する。
-const int whiteSwitch = 16;
-const int redSwitch = 5;
-const int yellowSwitch = 4;
-const int orangeSwitch = 13;
-const int joyStick = 2;
-const int xValue = 14;
-const int yValue = 12;
-
-const int led = 15;
+const int upSwitch = 0;
+const int downSwitch = 1;
+const int rightSwitch = 2;
+const int leftSwitch = 3;
+const int buzzerSwitch = 4;
+const int tempSwitch = 5;
+const int redLedSwitch = 6;
+const int blueLedSwitch = 7;
 
 unsigned long lastTime = 0;
 unsigned long timerDelay = 500; // send readings timer
 
 typedef struct struct_message
 {
-  int white;
-  int red;
-  int yellow;
-  int orange;
-  int Onled;
+  int up;
+  int down;
+  int right;
+  int left;
+  int onRedLed;
+  int onBlueLed;
   int buzzer;
   int battery;
   int temp;
@@ -57,37 +57,34 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus)
   else
   {
     Serial.println("Delivery fail");
-    Serial.println(mcp.digitalRead(8));
+    // Serial.println(mcp.digitalRead(8));
   }
 }
 
 void gpioSetup()
 {
-  pinMode(whiteSwitch, INPUT_PULLUP);
-  pinMode(redSwitch, INPUT_PULLUP);
-  pinMode(yellowSwitch, INPUT_PULLUP);
-  pinMode(orangeSwitch, INPUT_PULLUP);
-  // pinMode(joyStick, INPUT_PULLUP);
-  // pinMode(xValue, INPUT);
-  // pinMode(yValue, INPUT);
-
-  pinMode(led, OUTPUT);
+  for (int i = 0; i <= 7; i++)
+  {
+    mcp.pinMode(i, INPUT);
+  }
+  for (int i = 8; i <= 15; i++)
+  {
+    mcp.pinMode(i, OUTPUT);
+  }
 }
 
 void inPutValue()
 {
-  myData.white = digitalRead(whiteSwitch);
-  myData.red = digitalRead(redSwitch);
-  myData.yellow = digitalRead(yellowSwitch);
-  myData.orange = digitalRead(orangeSwitch);
-  myData.Onled = 1;
-  myData.buzzer = 1;
+  myData.up = mcp.digitalRead(upSwitch);
+  myData.down = mcp.digitalRead(downSwitch);
+  myData.right = mcp.digitalRead(rightSwitch);
+  myData.left = mcp.digitalRead(leftSwitch);
+  myData.onRedLed = mcp.digitalRead(redLedSwitch);
+  myData.onBlueLed = mcp.digitalRead(blueLedSwitch);
+  myData.buzzer = mcp.digitalRead(buzzerSwitch);
+  myData.temp = mcp.digitalRead(tempSwitch);
   myData.battery = 1;
-  myData.temp = 1;
   myData.water = 1;
-  // myData.joy = digitalRead(joyStick);
-  // myData.x = digitalRead(xValue);
-  // myData.y = digitalRead(yValue);
 }
 
 void setup()
@@ -97,11 +94,9 @@ void setup()
   shipData.battery = 1;
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
-  // gpioSetup();
   Wire.begin(2, 14);
   mcp.init();
-  mcp.pinMode(7, OUTPUT);
-  mcp.pinMode(8, INPUT);
+  gpioSetup();
   // Init ESP-NOW
   if (esp_now_init() != 0)
   {
@@ -122,7 +117,7 @@ void loop()
     inPutValue();
     // Send message via ESP-NOW
     // esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));
-    if (shipData.battery == 0 || myData.white == 0)
+    if (shipData.battery == 0 || myData.up == 0)
     {
       digitalWrite(15, HIGH);
     }
@@ -132,7 +127,6 @@ void loop()
     }
     lastTime = millis(); // プログラム実行から経過した時間
   } */
-
   mcp.digitalWrite(7, 1);
   delay(500);
   mcp.digitalWrite(7, 0);
