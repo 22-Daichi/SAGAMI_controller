@@ -8,14 +8,14 @@
 MCP23017 mcp = MCP23017(0x20);
 
 // コントローラーにセットして電源を入れたら左のスイッチを押しながら右のスイッチを押すと起動する。
-const int upSwitch = 0;
-const int downSwitch = 1;
-const int rightSwitch = 2;
-const int leftSwitch = 3;
-const int buzzerSwitch = 4;
-const int tempSwitch = 5;
-const int redLedSwitch = 6;
-const int blueLedSwitch = 7;
+const int upSwitch = 8;
+const int downSwitch = 9;
+const int rightSwitch = 10;
+const int leftSwitch = 11;
+const int buzzerSwitch = 12;
+const int tempSwitch = 13;
+// const int redLedSwitch = 6;
+// const int blueLedSwitch = 7;
 
 unsigned long lastTime = 0;
 unsigned long timerDelay = 500; // send readings timer
@@ -65,11 +65,11 @@ void gpioSetup()
 {
   for (int i = 0; i <= 7; i++)
   {
-    mcp.pinMode(i, INPUT);
-  }
-  for (int i = 8; i <= 15; i++)
-  {
     mcp.pinMode(i, OUTPUT);
+  }
+  for (int i = 8; i <= 13; i++)
+  {
+    mcp.pinMode(i, INPUT);
   }
 }
 
@@ -79,8 +79,6 @@ void inPutValue()
   myData.down = mcp.digitalRead(downSwitch);
   myData.right = mcp.digitalRead(rightSwitch);
   myData.left = mcp.digitalRead(leftSwitch);
-  myData.onRedLed = mcp.digitalRead(redLedSwitch);
-  myData.onBlueLed = mcp.digitalRead(blueLedSwitch);
   myData.buzzer = mcp.digitalRead(buzzerSwitch);
   myData.temp = mcp.digitalRead(tempSwitch);
   myData.battery = 1;
@@ -127,9 +125,41 @@ void loop()
     }
     lastTime = millis(); // プログラム実行から経過した時間
   } */
-  mcp.digitalWrite(7, 1);
-  delay(500);
-  mcp.digitalWrite(7, 0);
+  /*
+   for (int i = 0; i < 8; i++)
+   {
+     mcp.digitalWrite(i, 1);
+   }
+   delay(500);
+   */
+  for (int i = 0; i < 8; i++)
+  {
+    mcp.digitalWrite(i, 0);
+   } 
+  inPutValue();
+  if(myData.up == 0){
+    mcp.digitalWrite(1,1);
+  }
+  if (myData.down == 0)
+  {
+    mcp.digitalWrite(2, 1);
+  }
+  if (myData.right == 0)
+  {
+    mcp.digitalWrite(3, 1);
+  }
+  if (myData.left == 0)
+  {
+    mcp.digitalWrite(4, 1);
+  }
+  if (myData.buzzer == 0)
+  {
+    mcp.digitalWrite(5, 1);
+  }
+  if (myData.temp == 0)
+  {
+    mcp.digitalWrite(6, 1);
+  }
   delay(500);
   esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));
 }
