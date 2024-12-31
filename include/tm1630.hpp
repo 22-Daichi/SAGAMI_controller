@@ -13,9 +13,9 @@
 #define STB_DISABLE HIGH
 #define DOT_POSITION 2
 
-uint8_t dioPin = 2;
-uint8_t clkPin = 12;
-uint8_t stbPin = 14;
+uint8_t dioPin = 16;
+uint8_t clkPin = 5;
+uint8_t stbPin = 4;
 
 const int numberOfDigits = DISPLAY_MODE & 1 ? 5 : 4;
 int gridData[numberOfDigits] = {0};
