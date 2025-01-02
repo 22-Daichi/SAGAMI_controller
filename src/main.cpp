@@ -135,10 +135,11 @@ void loop()
   for (int i = 0; i < 8; i++)
   {
     mcp.digitalWrite(i, 0);
-   } 
+  }
   inPutValue();
-  if(myData.up == 0){
-    mcp.digitalWrite(1,1);
+  if (myData.up == 0)
+  {
+    mcp.digitalWrite(1, 1);
   }
   if (myData.down == 0)
   {
