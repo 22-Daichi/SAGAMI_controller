@@ -4,6 +4,7 @@
 #include <espnow.h>
 #include <Wire.h>
 #include <MCP23017.h>
+#include <tm1630.hpp>
 
 MCP23017 mcp = MCP23017(0x20);
 
@@ -34,8 +35,8 @@ typedef struct struct_message
   int water;
 } struct_message;
 
-// Create a struct_message called myData
-struct_message myData;
+// Create a struct_message called controllerData
+struct_message controllerData;
 struct_message shipData;
 
 // REPLACE WITH RECEIVER MAC Address
@@ -75,26 +76,26 @@ void gpioSetup()
 
 void inPutValue()
 {
-  myData.up = mcp.digitalRead(upSwitch);
-  myData.down = mcp.digitalRead(downSwitch);
-  myData.right = mcp.digitalRead(rightSwitch);
-  myData.left = mcp.digitalRead(leftSwitch);
-  myData.buzzer = mcp.digitalRead(buzzerSwitch);
-  myData.temp = mcp.digitalRead(tempSwitch);
-  myData.battery = 1;
-  myData.water = 1;
+  controllerData.up = mcp.digitalRead(upSwitch);
+  controllerData.down = mcp.digitalRead(downSwitch);
+  controllerData.right = mcp.digitalRead(rightSwitch);
+  controllerData.left = mcp.digitalRead(leftSwitch);
+  controllerData.buzzer = mcp.digitalRead(buzzerSwitch);
+  controllerData.temp = mcp.digitalRead(tempSwitch);
+  controllerData.battery = 1;
+  controllerData.water = 1;
 }
 
 void setup()
 {
   // Init Serial Monitor
   Serial.begin(9600);
-  shipData.battery = 1;
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
   Wire.begin(2, 14);
   mcp.init();
-  gpioSetup();
+  gpioSetup();   // I/Oエキスパンダ
+  tm1630setup(); // 7セグドライバ
   // Init ESP-NOW
   if (esp_now_init() != 0)
   {
@@ -114,8 +115,8 @@ void loop()
     // Set values to send
     inPutValue();
     // Send message via ESP-NOW
-    // esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));
-    if (shipData.battery == 0 || myData.up == 0)
+    // esp_now_send(broadcastAddress, (uint8_t *)&controllerData, sizeof(controllerData));
+    if (shipData.battery == 0 || controllerData.up == 0)
     {
       digitalWrite(15, HIGH);
     }
@@ -137,30 +138,31 @@ void loop()
     mcp.digitalWrite(i, 0);
   }
   inPutValue();
-  if (myData.up == 0)
+  if (controllerData.up == 0)
   {
     mcp.digitalWrite(1, 1);
   }
-  if (myData.down == 0)
+  if (controllerData.down == 0)
   {
     mcp.digitalWrite(2, 1);
   }
-  if (myData.right == 0)
+  if (controllerData.right == 0)
   {
     mcp.digitalWrite(3, 1);
   }
-  if (myData.left == 0)
+  if (controllerData.left == 0)
   {
     mcp.digitalWrite(4, 1);
   }
-  if (myData.buzzer == 0)
+  if (controllerData.buzzer == 0)
   {
     mcp.digitalWrite(5, 1);
   }
-  if (myData.temp == 0)
+  if (controllerData.temp == 0)
   {
     mcp.digitalWrite(6, 1);
   }
+  displayNumbers(800);
   delay(500);
-  esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));
+  esp_now_send(broadcastAddress, (uint8_t *)&controllerData, sizeof(controllerData));
 }
