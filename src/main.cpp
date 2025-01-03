@@ -9,11 +9,20 @@
 MCP23017 mcp = MCP23017(0x20);
 
 // コントローラーにセットして電源を入れたら左のスイッチを押しながら右のスイッチを押すと起動する。
-const int upSwitch = 8;
-const int downSwitch = 9;
-const int rightSwitch = 10;
-const int leftSwitch = 11;
-const int buzzerSwitch = 12;
+const int tempsensorGood = 0;
+const int tempsensorBad = 1;
+const int watersensorGood = 2;
+const int watersensorBad = 4;
+const int batteryvoltageGood = 3;
+const int batteryvoltageBad = 6;
+const int communicationstatusGood = 5;
+const int communicationstatusBad = 7;
+
+const int upSwitch = 9;
+const int downSwitch = 11;
+const int rightSwitch = 8;
+const int leftSwitch = 12;
+const int buzzerSwitch = 10;
 const int tempSwitch = 13;
 // const int redLedSwitch = 6;
 // const int blueLedSwitch = 7;
@@ -27,11 +36,9 @@ typedef struct struct_message
   int down;
   int right;
   int left;
-  int onRedLed;
-  int onBlueLed;
   int buzzer;
-  int battery;
   int temp;
+  int battery;
   int water;
 } struct_message;
 
@@ -50,15 +57,18 @@ void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len)
 // Callback when data is sent
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus)
 {
-  Serial.print("Last Packet Send Status: ");
+  // Serial.print("Last Packet Send Status: ");
   if (sendStatus == 0)
   {
-    Serial.println("Delivery success");
+    // Serial.println("Delivery success");
+    mcp.digitalWrite(communicationstatusGood,1);
+    mcp.digitalWrite(communicationstatusBad, 0);
   }
   else
   {
-    Serial.println("Delivery fail");
-    // Serial.println(mcp.digitalRead(8));
+    // Serial.println("Delivery fail");
+    mcp.digitalWrite(communicationstatusGood, 0);
+    mcp.digitalWrite(communicationstatusBad, 1);
   }
 }
 
@@ -67,6 +77,7 @@ void gpioSetup()
   for (int i = 0; i <= 7; i++)
   {
     mcp.pinMode(i, OUTPUT);
+    mcp.digitalWrite(i, 0);
   }
   for (int i = 8; i <= 13; i++)
   {
@@ -76,6 +87,7 @@ void gpioSetup()
 
 void inPutValue()
 {
+  // 基本的に"1"を送信。"0"はスイッチが押されている状態。
   controllerData.up = mcp.digitalRead(upSwitch);
   controllerData.down = mcp.digitalRead(downSwitch);
   controllerData.right = mcp.digitalRead(rightSwitch);
@@ -89,7 +101,7 @@ void inPutValue()
 void setup()
 {
   // Init Serial Monitor
-  Serial.begin(9600);
+  // Serial.begin(9600);
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
   Wire.begin(2, 14);
@@ -133,35 +145,6 @@ void loop()
    }
    delay(500);
    */
-  for (int i = 0; i < 8; i++)
-  {
-    mcp.digitalWrite(i, 0);
-  }
-  inPutValue();
-  if (controllerData.up == 0)
-  {
-    mcp.digitalWrite(1, 1);
-  }
-  if (controllerData.down == 0)
-  {
-    mcp.digitalWrite(2, 1);
-  }
-  if (controllerData.right == 0)
-  {
-    mcp.digitalWrite(3, 1);
-  }
-  if (controllerData.left == 0)
-  {
-    mcp.digitalWrite(4, 1);
-  }
-  if (controllerData.buzzer == 0)
-  {
-    mcp.digitalWrite(5, 1);
-  }
-  if (controllerData.temp == 0)
-  {
-    mcp.digitalWrite(6, 1);
-  }
   displayNumbers(800);
   delay(500);
   esp_now_send(broadcastAddress, (uint8_t *)&controllerData, sizeof(controllerData));
