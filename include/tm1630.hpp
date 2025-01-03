@@ -11,7 +11,7 @@
 #define DISPLAY_ON 0x88 | 0x84
 #define STB_ENABLE LOW
 #define STB_DISABLE HIGH
-#define DOT_POSITION 2
+// int DOT_POSITION = 2;
 
 uint8_t dioPin = 16;
 uint8_t clkPin = 5;
@@ -39,7 +39,7 @@ uint8_t digit[12] = {
 const int blank = 10;
 const int dot = 11;
 
-void displayNumbers(int n)
+void displayNumbers(int n,int DOT_POSITION)
 {
     for (int i = 0; i < numberOfDigits; i++)
     {

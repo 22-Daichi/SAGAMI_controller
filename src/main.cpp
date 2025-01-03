@@ -28,7 +28,7 @@ const int tempSwitch = 13;
 // const int blueLedSwitch = 7;
 
 unsigned long lastTime = 0;
-unsigned long timerDelay = 500; // send readings timer
+unsigned long timerDelay = 100; // send readings timer
 
 typedef struct struct_message
 {
@@ -52,6 +52,36 @@ uint8_t broadcastAddress[] = {0x18, 0xFE, 0x34, 0xEF, 0x08, 0x83};
 void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len)
 {
   memcpy(&shipData, incomingData, sizeof(shipData));
+  if (shipData.temp < 500)// tempは10倍の値で渡される
+  {
+    mcp.digitalWrite(tempsensorGood, 1);
+    mcp.digitalWrite(tempsensorBad, 0);
+  }
+  else
+  {
+    mcp.digitalWrite(tempsensorGood, 0);
+    mcp.digitalWrite(tempsensorBad, 1);
+  }
+  if (shipData.water == 1)
+  {
+    mcp.digitalWrite(watersensorGood, 1);
+    mcp.digitalWrite(watersensorBad, 0);
+  }
+  else
+  {
+    mcp.digitalWrite(watersensorGood, 0);
+    mcp.digitalWrite(watersensorBad, 1);
+  }
+  if (shipData.battery > 660) // 1セル当たり3.3Vで警告
+  {
+    mcp.digitalWrite(batteryvoltageGood, 1);
+    mcp.digitalWrite(batteryvoltageBad, 0);
+  }
+  else
+  {
+    mcp.digitalWrite(batteryvoltageGood, 0);
+    mcp.digitalWrite(batteryvoltageBad, 1);
+  }
 }
 
 // Callback when data is sent
@@ -61,7 +91,7 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus)
   if (sendStatus == 0)
   {
     // Serial.println("Delivery success");
-    mcp.digitalWrite(communicationstatusGood,1);
+    mcp.digitalWrite(communicationstatusGood, 1);
     mcp.digitalWrite(communicationstatusBad, 0);
   }
   else
@@ -69,6 +99,12 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus)
     // Serial.println("Delivery fail");
     mcp.digitalWrite(communicationstatusGood, 0);
     mcp.digitalWrite(communicationstatusBad, 1);
+    mcp.digitalWrite(batteryvoltageGood, 0);
+    mcp.digitalWrite(batteryvoltageBad, 1);
+    mcp.digitalWrite(watersensorGood, 0);
+    mcp.digitalWrite(watersensorBad, 1);
+    mcp.digitalWrite(tempsensorGood, 0);
+    mcp.digitalWrite(tempsensorBad, 1);
   }
 }
 
@@ -122,30 +158,18 @@ void setup()
 
 void loop()
 {
-  /* if ((millis() - lastTime) > timerDelay) // 50msに1回
+  if ((millis() - lastTime) > timerDelay)
   {
-    // Set values to send
     inPutValue();
-    // Send message via ESP-NOW
-    // esp_now_send(broadcastAddress, (uint8_t *)&controllerData, sizeof(controllerData));
-    if (shipData.battery == 0 || controllerData.up == 0)
+    if (controllerData.temp == 0)
     {
-      digitalWrite(15, HIGH);
+      displayNumbers(shipData.temp, 1);
     }
     else
     {
-      digitalWrite(15, LOW);
+      displayNumbers(shipData.battery, 2);
     }
+    esp_now_send(broadcastAddress, (uint8_t *)&controllerData, sizeof(controllerData));
     lastTime = millis(); // プログラム実行から経過した時間
-  } */
-  /*
-   for (int i = 0; i < 8; i++)
-   {
-     mcp.digitalWrite(i, 1);
-   }
-   delay(500);
-   */
-  displayNumbers(800);
-  delay(500);
-  esp_now_send(broadcastAddress, (uint8_t *)&controllerData, sizeof(controllerData));
+  }
 }
