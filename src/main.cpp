@@ -28,7 +28,7 @@ const int tempSwitch = 13;
 // const int blueLedSwitch = 7;
 
 unsigned long lastTime = 0;
-unsigned long timerDelay = 100; // send readings timer
+unsigned long timerDelay = 50; // send readings timer
 
 typedef struct struct_message
 {
@@ -47,7 +47,7 @@ struct_message controllerData;
 struct_message shipData;
 
 // REPLACE WITH RECEIVER MAC Address
-uint8_t broadcastAddress[] = {0x18, 0xFE, 0x34, 0xEF, 0x08, 0x83};
+uint8_t broadcastAddress[] = {0x5C, 0xCF, 0x7F, 0x08, 0xAA, 0xC3};
 
 void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len)
 {
@@ -82,6 +82,14 @@ void OnDataRecv(uint8_t *mac, uint8_t *incomingData, uint8_t len)
     mcp.digitalWrite(batteryvoltageGood, 0);
     mcp.digitalWrite(batteryvoltageBad, 1);
   }
+  if (controllerData.temp == 0)
+  {
+    displayNumbers(shipData.temp, 1);
+  }
+  else
+  {
+    displayNumbers(shipData.battery, 2);
+  }
 }
 
 // Callback when data is sent
@@ -105,6 +113,7 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus)
     mcp.digitalWrite(watersensorBad, 1);
     mcp.digitalWrite(tempsensorGood, 0);
     mcp.digitalWrite(tempsensorBad, 1);
+    displayNumbers(0,0);
   }
 }
 
@@ -161,14 +170,6 @@ void loop()
   if ((millis() - lastTime) > timerDelay)
   {
     inPutValue();
-    if (controllerData.temp == 0)
-    {
-      displayNumbers(shipData.temp, 1);
-    }
-    else
-    {
-      displayNumbers(shipData.battery, 2);
-    }
     esp_now_send(broadcastAddress, (uint8_t *)&controllerData, sizeof(controllerData));
     lastTime = millis(); // プログラム実行から経過した時間
   }
